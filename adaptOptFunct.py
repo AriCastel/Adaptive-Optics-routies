@@ -35,6 +35,17 @@ class adaptiveOpt:
             metric = np.sum(img * mask * (dist_from_center ** power)) 
         return metric
     
+    def metric_better_r(img, integration_radius=30):
+        cmass = scipy.ndimage.measurements.center_of_mass(img)
+        h, w = img.shape[0], img.shape[1]
+        x_center, y_center = cmass[1], cmass[0]
+        y, x = np.ogrid[:h, :w]
+        radious = np.sqrt((x - x_center) ** 2 + (y - y_center) ** 2)
+        mask = (radious <= integration_radius).astype(int)
+        metric = np.sum(img*mask*radious)/np.sum(img)
+
+        return metric
+    
     def extract_centered_matrix(matrix, center_coord, size):
         """
         Extract a smaller matrix centered around a specific coordinate from a larger matrix.
@@ -80,8 +91,9 @@ class adaptiveOpt:
         
         # Threshold the matrix
         thresholded_matrix = np.where(matrix < threshold_value, 0, matrix)
+        result = (thresholded_matrix - thresholded_matrix.min)*(100/thresholded_matrix.max)
         
-        return thresholded_matrix
+        return result
     
     def center_of_mass(image):
         """
@@ -129,6 +141,7 @@ class adaptiveOpt:
         guideStar = adaptiveOpt.extract_centered_matrix(threshStar,centerOfMass,size)
         if graph:
             plt.imshow(guideStar) 
+            plt.colorbar
             plt.show()
         
         return guideStar 
