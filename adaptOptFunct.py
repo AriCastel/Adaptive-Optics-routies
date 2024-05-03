@@ -136,7 +136,7 @@ class adaptiveOpt:
         image = tagged_image.pix.reshape((imageH,imageW))
 
         threshStar = adaptiveOpt.threshold_matrix(image)
-        centerOfMass = adaptiveOpt.center_of_mass(threshStar)
+        centerOfMass = scipy.ndimage.measurements.center_of_mass(threshStar)
         
         guideStar = adaptiveOpt.extract_centered_matrix(threshStar,centerOfMass,size)
         if graph:
