@@ -1,10 +1,9 @@
 ########
 """
 Utility Functions for SPIM2 related code 
-Code that doesn't explicitly relate to the SLM or .CORE 
-functions should go here. 
+Code that doesn't explicitly relate to the SLM or .CORE functions should go here. 
 Artemis Castelblanco
-Versión: 1.3.20240421
+Version: 3.0.20240517
 """
 #######
 import logging
@@ -13,6 +12,8 @@ import os
 import cv2
 import aotools
 import matplotlib.pyplot as plt
+from datetime import datetime
+import pandas as pd
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 ######
@@ -21,7 +22,6 @@ Matrix Related Functions
 """
 ######    
 class matriarch():
-    
     def truncate(matrix, threshold):
         """
         Truncates matrix values after a certain threshold.
@@ -35,9 +35,7 @@ class matriarch():
         """
         truncated_matrix = [[min(value, threshold) for value in row] for row in matrix]
         return truncated_matrix
-    
-    
-    
+
     def stretch_image(image, stretch_factor, axis='x'):
         """
         Stretch an image array along a given axis by a stretch factor.
@@ -86,7 +84,7 @@ class matriarch():
 
         return frame
 
-    def generate_torus(shape,innerRad, outerRad):
+    def generate_torus(shape,innerRad, outerRad, factor=127):
         """
         Generates a Toroidal shape
         Parameters:
@@ -98,21 +96,25 @@ class matriarch():
         Returns:
             numpy.ndarray: matrix with the torus.
         """
-        matrix = np.zeros(shape) + aotools.circle(outerRad,shape[0]) - aotools.circle(innerRad,shape[0])
+        shape=(int(outerRad*2), int(outerRad*2))
+
+        matrix = (np.zeros(shape) + aotools.circle(outerRad,shape[0]) - aotools.circle(innerRad,shape[0]))*factor
         
         return matrix        
         
-    def generate_curtain(shape, split_column, ):
+    def generate_curtain(shape, split_column, value=1 ):
+        """Generates a Curtain phase mask
+
+        Args:
+            shape (tuple): Shape of the curtain phase mask
+            split_column (int): column where the curtain stops 
+
+        Returns:
+            ndarray: phase mask containing curtain
+        """
+        
         matrix = np.zeros(shape)  # Create a matrix of zeros
-        matrix[:, :split_column] = 1     # Set columns before split_column to 1
-        
-        maxmat =matrix.max()
-        if maxmat > 0: 
-            alpha = (np.pi)/maxmat
-        else: 
-            alpha = np.pi
-        matrixinPi = matrix*alpha
-        
+        matrix[:, :split_column] = value     # Set columns before split_column to 1
     
         return matrix
 
@@ -122,14 +124,17 @@ File management related Functions
 """
 ######  
 class librarian: 
-    def save_data():
-        #TODO Make a function that saves the files in the standard format
+    def save_data(file, name, foldername, extension='csv'):
+        pandaValued = pd.DataFrame(file)
+        current_datetime = datetime.now()
+        folder_name = f"{current_datetime.strftime('%Y-%m-%d')}_{foldername}"
+        os.makedirs(folder_name, exist_ok=True)
+        filename = f"{name}.{extension}"
+        file_path = os.path.join(folder_name, filename)
+        pandaValued.to_csv(file_path, index = False)
         pass
     
-    
-    
-    
-    def save_graph(plot, filename):
+    def save_graph(file, name, foldername, extension='pdf'):
         """
         Save a matplotlib plot as a PDF file in the parent folder of the Python file.
         
@@ -137,8 +142,11 @@ class librarian:
             plot (matplotlib.pyplot plot): The plot to save.
             filename (str): The filename (without extension) to save the plot as.
         """
-        parent_folder = os.path.dirname(os.path.abspath(__file__))
-        
-        
+        current_datetime = datetime.now()
+        folder_name = f"{current_datetime.strftime('%Y-%m-%d')}_{foldername}"
+        os.makedirs(folder_name, exist_ok=True)
+        filename = f"{name}.{extension}"
+        file_path = os.path.join(folder_name, filename)
+        file.save(file_path)
         pass
     
